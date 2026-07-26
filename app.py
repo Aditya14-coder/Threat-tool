@@ -12,7 +12,7 @@ load_dotenv()
 VT_API_KEY = os.getenv("VT_API_KEY")
 app = Flask(__name__)
 
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "/tmp"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Store results in memory during the session
