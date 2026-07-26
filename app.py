@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, make_response
-from parser import parse_log_file
+from log_parser import parse_log_file
 from detection import run_detection, get_summary
 from linux_detection import run_linux_detection
 from smart_parser import smart_parse_json
