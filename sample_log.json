@@ -1,0 +1,50 @@
+[
+  {
+    "EventID": 4625,
+    "TimeCreated": "2024-01-15T10:23:45",
+    "Username": "administrator",
+    "Hostname": "DESKTOP-ABC123",
+    "ProcessName": "svchost.exe",
+    "CommandLine": "svchost.exe -k netsvcs"
+  },
+  {
+    "EventID": 4720,
+    "TimeCreated": "2024-01-15T10:45:00",
+    "Username": "hacker",
+    "Hostname": "DESKTOP-ABC123",
+    "ProcessName": "net.exe",
+    "CommandLine": "net user backdoor P@ssw0rd /add"
+  },
+  {
+    "EventID": 4104,
+    "TimeCreated": "2024-01-15T11:00:00",
+    "Username": "SYSTEM",
+    "Hostname": "DESKTOP-ABC123",
+    "ProcessName": "powershell.exe",
+    "CommandLine": "powershell -enc JABjAGwAaQBlAG4AdA"
+  },
+  {
+    "EventID": 4698,
+    "TimeCreated": "2024-01-15T11:15:00",
+    "Username": "administrator",
+    "Hostname": "DESKTOP-ABC123",
+    "ProcessName": "taskschd.exe",
+    "CommandLine": "schtasks /create /tn backdoor /tr malware.exe"
+  },
+  {
+    "EventID": 4624,
+    "TimeCreated": "2024-01-15T11:30:00",
+    "Username": "administrator",
+    "Hostname": "DESKTOP-ABC123",
+    "ProcessName": "winlogon.exe",
+    "CommandLine": ""
+  },
+  {
+    "EventID": 7045,
+    "TimeCreated": "2024-01-15T11:45:00",
+    "Username": "SYSTEM",
+    "Hostname": "DESKTOP-ABC123",
+    "ProcessName": "services.exe",
+    "CommandLine": "malware_service.exe /auto"
+  }
+]

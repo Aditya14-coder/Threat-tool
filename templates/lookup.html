@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreatTool - Threat Intel Lookup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="tl-navbar">
+    <div class="tl-navbar-brand">
+        <span class="tl-logo-icon">⬡</span>
+        <span class="tl-logo-text">ThreatLens</span>
+        <span class="tl-logo-sub">SOC Platform</span>
+    </div>
+    <div class="tl-navbar-right">
+    <button class="tl-theme-btn" onclick="toggleTheme()" id="themeBtn">
+        ☀ Light mode
+    </button>
+    <a href="/dashboard" class="tl-nav-btn">▦ Dashboard</a>
+        <a href="/" class="tl-nav-btn">↑ Upload Log</a>
+    </div>
+</nav>
+
+<div class="tl-lookup-wrap">
+    <div class="tl-lookup-card">
+        <h1 class="tl-lookup-title">🛡 Threat Intelligence Lookup</h1>
+        <p class="tl-lookup-sub">Search for an IP address, domain, or file hash (MD5 / SHA1 / SHA256) via VirusTotal</p>
+
+        <div style="display:flex; gap:8px; margin-bottom:1.5rem;">
+            <input type="text"
+                   id="vtQuery"
+                   class="tl-input"
+                   placeholder="e.g. 8.8.8.8 / evil.com / 44d88612..."
+                   onkeydown="if(event.key==='Enter') doLookup()"
+                   style="flex:1;">
+            <button onclick="doLookup()" class="tl-btn-primary" style="white-space:nowrap; padding:8px 20px;">
+                Lookup
+            </button>
+        </div>
+
+        <div id="vtLoading" style="display:none; text-align:center; padding:2rem;">
+            <div style="color:#64748b; font-size:0.85rem;">Querying VirusTotal...</div>
+        </div>
+
+        <div id="vtResult"></div>
+    </div>
+</div>
+
+<script>
+async function doLookup() {
+    const query = document.getElementById("vtQuery").value.trim();
+    if (!query) return;
+
+    document.getElementById("vtLoading").style.display = "block";
+    document.getElementById("vtResult").innerHTML = "";
+
+    try {
+        const formData = new FormData();
+        formData.append("query", query);
+        const response = await fetch("/lookup", { method: "POST", body: formData });
+        const data = await response.json();
+        document.getElementById("vtLoading").style.display = "none";
+        renderResult(data);
+    } catch (err) {
+        document.getElementById("vtLoading").style.display = "none";
+        document.getElementById("vtResult").innerHTML =
+            `<div class="tl-error">Request failed: ${err.message}</div>`;
+    }
+}
+
+function verdictColor(v) {
+    return v === "Malicious" ? "#ef4444" : v === "Suspicious" ? "#f97316" : "#22c55e";
+}
+
+function verdictBg(v) {
+    return v === "Malicious" ? "#3f1f1f" : v === "Suspicious" ? "#3f2010" : "#0f2a1a";
+}
+
+function renderResult(data) {
+    const el = document.getElementById("vtResult");
+
+    if (data.error) {
+        el.innerHTML = `<div class="tl-error">${data.error}</div>`;
+        return;
+    }
+
+    const total   = data.total || 1;
+    const malPct  = Math.round((data.malicious / total) * 100);
+    const vColor  = verdictColor(data.verdict);
+    const vBg     = verdictBg(data.verdict);
+
+    let extraRows = "";
+    if (data.type === "IP Address") {
+        extraRows = `
+        <tr><td>Country</td><td>${data.country}</td></tr>
+        <tr><td>Owner / ASN</td><td>${data.owner}</td></tr>
+        <tr><td>Reputation</td><td>${data.reputation}</td></tr>`;
+    }
+    if (data.type === "Domain") {
+        extraRows = `
+        <tr><td>Registrar</td><td>${data.registrar}</td></tr>
+        <tr><td>Categories</td><td>${(data.categories||[]).join(", ")||"N/A"}</td></tr>
+        <tr><td>Reputation</td><td>${data.reputation}</td></tr>`;
+    }
+    if (data.type === "File Hash") {
+        extraRows = `
+        <tr><td>File type</td><td>${data.file_type}</td></tr>
+        <tr><td>File size</td><td>${data.file_size} bytes</td></tr>
+        <tr><td>MD5</td><td style="font-family:monospace;font-size:0.78rem">${data.md5}</td></tr>
+        <tr><td>SHA1</td><td style="font-family:monospace;font-size:0.78rem">${data.sha1}</td></tr>
+        <tr><td>Known names</td><td>${(data.file_names||[]).join(", ")||"N/A"}</td></tr>`;
+    }
+
+    let enginesHTML = "";
+    if (data.flagged_by && data.flagged_by.length > 0) {
+        const rows = data.flagged_by.map(f =>
+            `<tr><td style="color:#cbd5e1">${f.engine}</td><td style="color:#fca5a5;font-weight:600">${f.result}</td></tr>`
+        ).join("");
+        enginesHTML = `
+        <div style="margin-top:1.25rem;">
+            <div class="tl-section-title" style="margin-bottom:8px;">Flagged by security vendors</div>
+            <div style="max-height:200px;overflow-y:auto;border:1px solid #1e2536;border-radius:6px;">
+            <table class="tl-table" style="font-size:0.78rem;">
+                <thead><tr><th>Engine</th><th>Detection</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            </div>
+        </div>`;
+    } else {
+        enginesHTML = `<div style="margin-top:1rem;color:#22c55e;font-size:0.83rem;">✓ No security vendors flagged this indicator.</div>`;
+    }
+
+    el.innerHTML = `
+    <div style="border-top:1px solid #1e2536;padding-top:1.25rem;">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="background:#1e2536;color:#94a3b8;font-size:0.72rem;padding:2px 8px;border-radius:4px;border:1px solid #2d3748">${data.type}</span>
+                <code style="color:#94a3b8;font-size:0.8rem;">${data.query}</code>
+            </div>
+            <span style="background:${vBg};color:${vColor};font-size:0.82rem;font-weight:700;padding:4px 14px;border-radius:999px;">
+                ${data.verdict}
+            </span>
+        </div>
+
+        <div style="font-size:0.78rem;color:#64748b;margin-bottom:6px;">
+            ${data.malicious} of ${data.total} engines detected this as malicious
+        </div>
+        <div style="background:#0f1117;border-radius:4px;height:8px;overflow:hidden;margin-bottom:1.25rem;">
+            <div style="background:${vColor};height:100%;width:${malPct}%;transition:width 0.4s;border-radius:4px;"></div>
+        </div>
+
+        <table class="tl-table" style="font-size:0.83rem;">
+            <tbody>
+                <tr><td style="color:#64748b;width:40%">Malicious</td><td style="color:#fca5a5;font-weight:600">${data.malicious}</td></tr>
+                <tr><td style="color:#64748b">Suspicious</td><td style="color:#fdba74;font-weight:600">${data.suspicious}</td></tr>
+                <tr><td style="color:#64748b">Clean</td><td style="color:#86efac;font-weight:600">${data.clean}</td></tr>
+                ${extraRows}
+            </tbody>
+        </table>
+
+        ${enginesHTML}
+    </div>`;
+}
+</script>
+<script>
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-mode');
+        document.getElementById('themeBtn').innerHTML = '☾ Dark mode';
+    } else {
+        document.body.classList.remove('light-mode');
+        document.getElementById('themeBtn').innerHTML = '☀ Light mode';
+    }
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.contains('light-mode');
+    const newTheme = isLight ? 'dark' : 'light';
+    localStorage.setItem('tl-theme', newTheme);
+    applyTheme(newTheme);
+}
+
+// Apply saved theme immediately on page load
+const savedTheme = localStorage.getItem('tl-theme') || 'dark';
+applyTheme(savedTheme);
+</script>
+</body>
+</html>

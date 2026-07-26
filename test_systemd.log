@@ -1,0 +1,4 @@
+2024-01-15T10:23:45+0000 server1 sshd[1234]: Failed password for root from 192.168.1.100 port 22 ssh2
+2024-01-15T10:23:50+0000 server1 sshd[1235]: Accepted password for john from 192.168.1.50 port 22 ssh2
+2024-01-15T10:25:00+0000 server1 sudo[5678]: hacker : TTY=pts/0 ; PWD=/home/hacker ; USER=root ; COMMAND=/bin/bash
+2024-01-15T10:26:00+0000 server1 useradd[9999]: new user: name=backdoor, UID=1001, GID=1001

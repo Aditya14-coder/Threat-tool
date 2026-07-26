@@ -1,0 +1,4 @@
+<34>1 2024-01-15T10:23:45Z server1 sshd 1234 - Failed password for root from 192.168.1.100 port 22 ssh2
+<34>1 2024-01-15T10:23:50Z server1 sshd 1235 - Accepted password for john from 192.168.1.50 port 22 ssh2
+<85>1 2024-01-15T10:25:00Z server1 sudo 5678 - hacker : TTY=pts/0 ; PWD=/home/hacker ; USER=root ; COMMAND=/bin/bash
+<34>1 2024-01-15T10:27:00Z server1 su 9999 - FAILED su for root by hacker

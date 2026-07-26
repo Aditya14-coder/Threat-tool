@@ -1,0 +1,7 @@
+Jan 15 10:23:45 server1 sshd[1234]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jan 15 10:23:46 server1 sshd[1235]: Failed password for admin from 192.168.1.100 port 22 ssh2
+Jan 15 10:23:47 server1 sshd[1236]: Failed password for root from 192.168.1.100 port 22 ssh2
+Jan 15 10:23:50 server1 sshd[1237]: Accepted password for john from 192.168.1.50 port 22 ssh2
+Jan 15 10:25:00 server1 sudo: hacker : TTY=pts/0 ; PWD=/home/hacker ; USER=root ; COMMAND=/bin/bash
+Jan 15 10:26:00 server1 useradd[5678]: new user: name=backdoor, UID=1001, GID=1001
+Jan 15 10:27:00 server1 su[9999]: FAILED su for root by hacker

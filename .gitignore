@@ -1,0 +1,10 @@
+.env
+venv/
+__pycache__/
+uploads/*.json
+uploads/*.log
+*.pyc
+test_*.log
+test_*.json
+sample_*.json
+sample_*.log
