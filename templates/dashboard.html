@@ -199,32 +199,143 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for alert in alerts %}
-                        <tr>
-                            <td class="tl-num">{{ loop.index }}</td>
-                            <td>
-                                {% if alert.severity == 'Critical' %}
-                                    <span class="tl-sev tl-sev-tag-critical">● Critical</span>
-                                {% elif alert.severity == 'High' %}
-                                    <span class="tl-sev tl-sev-tag-high">● High</span>
-                                {% elif alert.severity == 'Medium' %}
-                                    <span class="tl-sev tl-sev-tag-medium">● Medium</span>
-                                {% else %}
-                                    <span class="tl-sev tl-sev-tag-low">● Low</span>
-                                {% endif %}
-                            </td>
-                            <td class="tl-alert-name">{{ alert.alert_name }}</td>
-                            <td><code class="tl-code">{{ alert.event_id }}</code></td>
-                            <td class="tl-username">{{ alert.username }}</td>
-                            <td class="tl-host">{{ alert.hostname }}</td>
-                            <td>
-                                <span class="tl-mitre">{{ alert.mitre_id }}</span>
-                                <span class="tl-mitre-name">{{ alert.mitre_name }}</span>
-                            </td>
-                            <td class="tl-time">{{ alert.timestamp }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
+    {% for alert in alerts %}
+    <tr class="tl-alert-row" onclick="toggleRow({{ loop.index }})">
+        <td class="tl-num">{{ loop.index }}</td>
+        <td>
+            {% if alert.severity == 'Critical' %}
+                <span class="tl-sev tl-sev-tag-critical">● Critical</span>
+            {% elif alert.severity == 'High' %}
+                <span class="tl-sev tl-sev-tag-high">● High</span>
+            {% elif alert.severity == 'Medium' %}
+                <span class="tl-sev tl-sev-tag-medium">● Medium</span>
+            {% else %}
+                <span class="tl-sev tl-sev-tag-low">● Low</span>
+            {% endif %}
+        </td>
+        <td class="tl-alert-name">{{ alert.alert_name }}</td>
+        <td><code class="tl-code">{{ alert.event_id }}</code></td>
+        <td class="tl-username">{{ alert.username }}</td>
+        <td class="tl-host">{{ alert.hostname }}</td>
+        <td>
+            <span class="tl-mitre">{{ alert.mitre_id }}</span>
+            <span class="tl-mitre-name">{{ alert.mitre_name }}</span>
+        </td>
+        <td class="tl-time">{{ alert.timestamp }}</td>
+        <td class="tl-expand-icon" id="icon-{{ loop.index }}">▶</td>
+    </tr>
+
+    <!-- Expanded Detail Row -->
+    <tr class="tl-detail-row" id="detail-{{ loop.index }}">
+        <td colspan="9">
+            <div class="tl-detail-wrap">
+
+                <!-- Left: Alert Info -->
+                <div class="tl-detail-section">
+                    <div class="tl-detail-heading">Alert Details</div>
+                    <div class="tl-detail-grid">
+                        <div class="tl-detail-item">
+                            <span class="tl-detail-label">Alert Name</span>
+                            <span class="tl-detail-value">{{ alert.alert_name }}</span>
+                        </div>
+                        <div class="tl-detail-item">
+                            <span class="tl-detail-label">Severity</span>
+                            <span class="tl-detail-value">{{ alert.severity }}</span>
+                        </div>
+                        <div class="tl-detail-item">
+                            <span class="tl-detail-label">Event ID</span>
+                            <span class="tl-detail-value"><code class="tl-code">{{ alert.event_id }}</code></span>
+                        </div>
+                        <div class="tl-detail-item">
+                            <span class="tl-detail-label">Timestamp</span>
+                            <span class="tl-detail-value">{{ alert.timestamp }}</span>
+                        </div>
+                        <div class="tl-detail-item">
+                            <span class="tl-detail-label">Username</span>
+                            <span class="tl-detail-value">{{ alert.username }}</span>
+                        </div>
+                        <div class="tl-detail-item">
+                            <span class="tl-detail-label">Hostname</span>
+                            <span class="tl-detail-value">{{ alert.hostname }}</span>
+                        </div>
+                        <div class="tl-detail-item tl-detail-full">
+                            <span class="tl-detail-label">Description</span>
+                            <span class="tl-detail-value">{{ alert.description }}</span>
+                        </div>
+                        {% if alert.commandline %}
+                        <div class="tl-detail-item tl-detail-full">
+                            <span class="tl-detail-label">Command Line</span>
+                            <code class="tl-detail-cmd">{{ alert.commandline }}</code>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Middle: MITRE Info -->
+                <div class="tl-detail-section">
+                    <div class="tl-detail-heading">MITRE ATT&CK</div>
+                    <div class="tl-mitre-block">
+                        <div class="tl-mitre-id-large">{{ alert.mitre_id }}</div>
+                        <div class="tl-mitre-name-large">{{ alert.mitre_name }}</div>
+                        <a href="https://attack.mitre.org/techniques/{{ alert.mitre_id.replace('.', '/') }}"
+                           target="_blank"
+                           class="tl-mitre-link">
+                            View on MITRE ATT&CK ↗
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right: Investigation Steps -->
+                <div class="tl-detail-section">
+                    <div class="tl-detail-heading">Investigation Steps</div>
+                    <div class="tl-steps">
+                        {% if alert.event_id == 4625 or alert.event_id == 'SSH-FAIL' %}
+                            <div class="tl-step">Check if multiple failed logins occurred from the same IP — may indicate brute force.</div>
+                            <div class="tl-step">Verify whether the targeted account exists and has elevated privileges.</div>
+                            <div class="tl-step">Cross-reference the source IP with threat intelligence lookup.</div>
+                            <div class="tl-step">Check for a successful login (Event 4624) shortly after the failures.</div>
+                        {% elif alert.event_id == 4720 or alert.event_id == 'USERADD' %}
+                            <div class="tl-step">Verify if this user creation was authorized by an administrator.</div>
+                            <div class="tl-step">Check the group membership of the newly created account.</div>
+                            <div class="tl-step">Review what actions the new account performed after creation.</div>
+                            <div class="tl-step">If unauthorized, disable the account and investigate the creator.</div>
+                        {% elif alert.event_id == 4104 %}
+                            <div class="tl-step">Decode the Base64 encoded PowerShell command to reveal the actual payload.</div>
+                            <div class="tl-step">Check if the script made network connections or downloaded files.</div>
+                            <div class="tl-step">Review the parent process that launched PowerShell.</div>
+                            <div class="tl-step">Hash any dropped files and check against VirusTotal.</div>
+                        {% elif alert.event_id == 4698 %}
+                            <div class="tl-step">Identify what executable the scheduled task runs and when.</div>
+                            <div class="tl-step">Check if the task binary exists on disk and hash it.</div>
+                            <div class="tl-step">Verify whether this task was created by a legitimate application.</div>
+                            <div class="tl-step">Delete the task if unauthorized and investigate persistence.</div>
+                        {% elif alert.event_id == 7045 %}
+                            <div class="tl-step">Identify the service binary path and hash the executable.</div>
+                            <div class="tl-step">Check if the service name matches any known malware signatures.</div>
+                            <div class="tl-step">Review service start type — auto-start services persist across reboots.</div>
+                            <div class="tl-step">Stop and disable the service if unauthorized.</div>
+                        {% elif alert.event_id == 'SUDO-EXEC' %}
+                            <div class="tl-step">Verify if the user is authorized to run sudo commands.</div>
+                            <div class="tl-step">Check the specific command run — shell commands like /bin/bash are high risk.</div>
+                            <div class="tl-step">Review /etc/sudoers to confirm what privileges this user has.</div>
+                            <div class="tl-step">Correlate with other activity from this user around the same time.</div>
+                        {% elif alert.event_id == 'SU-FAIL' %}
+                            <div class="tl-step">Check if multiple su failures occurred — may indicate password guessing.</div>
+                            <div class="tl-step">Identify which account was being targeted.</div>
+                            <div class="tl-step">Review whether a successful su followed the failures.</div>
+                        {% else %}
+                            <div class="tl-step">Review the full context of this event in surrounding log entries.</div>
+                            <div class="tl-step">Correlate this alert with other alerts from the same user or host.</div>
+                            <div class="tl-step">Check the MITRE ATT&CK page for recommended detection and mitigation.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
                 </table>
             </div>
 
