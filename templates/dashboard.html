@@ -187,17 +187,18 @@
             <div class="tl-table-wrap">
                 <table class="tl-table">
                     <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Severity</th>
-                            <th>Alert Name</th>
-                            <th>Event ID</th>
-                            <th>Username</th>
-                            <th>Hostname</th>
-                            <th>MITRE</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
+    <tr>
+        <th>#</th>
+        <th>Severity</th>
+        <th>Alert Name</th>
+        <th>Event ID</th>
+        <th>Username</th>
+        <th>Hostname</th>
+        <th>MITRE</th>
+        <th>Timestamp</th>
+        <th></th>
+    </tr>
+</thead>
                     <tbody>
     {% for alert in alerts %}
     <tr class="tl-alert-row" onclick="toggleRow({{ loop.index }})">
