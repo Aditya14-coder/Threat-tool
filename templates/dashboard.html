@@ -402,6 +402,25 @@ function toggleTheme() {
 // Apply saved theme immediately on page load
 const savedTheme = localStorage.getItem('tl-theme') || 'dark';
 applyTheme(savedTheme);
+function toggleRow(index) {
+    const detailRow = document.getElementById('detail-' + index);
+    const icon      = document.getElementById('icon-' + index);
+    const isOpen    = detailRow.classList.contains('open');
+
+    // Close all open rows first
+    document.querySelectorAll('.tl-detail-row.open').forEach(row => {
+        row.classList.remove('open');
+    });
+    document.querySelectorAll('.tl-expand-icon.open').forEach(ic => {
+        ic.classList.remove('open');
+    });
+
+    // Open clicked row if it was closed
+    if (!isOpen) {
+        detailRow.classList.add('open');
+        icon.classList.add('open');
+    }
+}
 </script>
 </body>
 </html>
