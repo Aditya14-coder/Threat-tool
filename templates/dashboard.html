@@ -17,23 +17,27 @@
         <span class="tl-logo-text">ThreatTool</span>
         <span class="tl-logo-sub">SOC Platform</span>
     </div>
-    <div class="tl-navbar-right">
+   <div class="tl-navbar-right">
     <button class="tl-theme-btn" onclick="toggleTheme()" id="themeBtn">
         ☀ Light mode
     </button>
-    <a href="/lookup-page" class="tl-nav-btn tl-nav-btn-danger">
-            <span>🛡</span> Threat Intel
-        </a>
-        <a href="/" class="tl-nav-btn">
-            <span>↑</span> Upload Log
-        </a>
-        <div class="tl-user-pill">
-    <span class="tl-user-dot" style="background: {{ color }};"></span>
-    <span class="tl-user-name">{{ username }}</span>
-    <span class="tl-user-role">{{ role }}</span>
-    <a href="/logout" class="tl-logout-btn">Logout</a>
-</div>
+    <a href="/lookup-page" class="tl-nav-btn tl-nav-btn-danger">🛡 Threat Intel</a>
+    <a href="/" class="tl-nav-btn">↑ Upload Log</a>
+
+    {% if username %}
+    <!-- Logged in: show user pill -->
+    <div class="tl-user-pill">
+        <span class="tl-user-dot" style="background: {{ color }};"></span>
+        <span class="tl-user-name">{{ username }}</span>
+        <a href="/logout" class="tl-logout-btn">Logout</a>
     </div>
+    {% else %}
+    <!-- Not logged in: show login button -->
+    <a href="/login" class="tl-nav-btn" style="color:#3b82f6; border-color:#1e3a5f;">
+        👤 Login
+    </a>
+    {% endif %}
+</div>
 </nav>
 
 <div class="tl-layout">
