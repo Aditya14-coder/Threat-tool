@@ -13,7 +13,7 @@ def get_db():
 
 
 # ── Register a new user ──────────────────────────────────
-def register_user(username, password):
+def register_user(username, password,role="User"):
     """
     Creates a new user in the database.
     Password is hashed with bcrypt before storing.
