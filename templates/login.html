@@ -75,6 +75,19 @@
 const savedTheme = localStorage.getItem('tl-theme') || 'dark';
 if (savedTheme === 'light') document.body.classList.add('light-mode');
 </script>
-
+<script>
+function togglePassword(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.style.opacity = "1";
+    } else {
+        input.type = "password";
+        btn.style.opacity = "0.5";
+    }
+}
+const savedTheme = localStorage.getItem('tl-theme') || 'dark';
+if (savedTheme === 'light') document.body.classList.add('light-mode');
+</script>
 </body>
 </html>
