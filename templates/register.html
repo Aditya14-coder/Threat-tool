@@ -31,17 +31,38 @@
 
             <div class="tl-field" style="margin-top:1rem;">
     <label class="tl-label">Password</label>
+    <div class="tl-field" style="margin-top:1rem;">
+    <label class="tl-label">Password</label>
     <div style="position:relative;">
         <input type="password"
                name="password"
-               id="loginPassword"
+               id="regPassword"
                class="tl-input"
-               placeholder="Enter your password"
-               autocomplete="current-password"
+               placeholder="Min 6 characters"
                style="padding-right:42px;"
                required>
         <button type="button"
-                onclick="togglePassword('loginPassword', this)"
+                onclick="togglePassword('regPassword', this)"
+                style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
+                       background:none; border:none; cursor:pointer; color:#64748b;
+                       font-size:1rem; padding:0;">
+            👁
+        </button>
+    </div>
+</div>
+
+<div class="tl-field" style="margin-top:1rem;">
+    <label class="tl-label">Confirm Password</label>
+    <div style="position:relative;">
+        <input type="password"
+               name="confirm"
+               id="regConfirm"
+               class="tl-input"
+               placeholder="Repeat your password"
+               style="padding-right:42px;"
+               required>
+        <button type="button"
+                onclick="togglePassword('regConfirm', this)"
                 style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
                        background:none; border:none; cursor:pointer; color:#64748b;
                        font-size:1rem; padding:0;">
@@ -90,6 +111,19 @@
 const savedTheme = localStorage.getItem('tl-theme') || 'dark';
 if (savedTheme === 'light') document.body.classList.add('light-mode');
 </script>
-
+<script>
+function togglePassword(fieldId, btn) {
+    const input = document.getElementById(fieldId);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.style.opacity = "1";
+    } else {
+        input.type = "password";
+        btn.style.opacity = "0.5";
+    }
+}
+const savedTheme = localStorage.getItem('tl-theme') || 'dark';
+if (savedTheme === 'light') document.body.classList.add('light-mode');
+</script>
 </body>
 </html>
