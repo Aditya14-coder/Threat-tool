@@ -1,4 +1,0 @@
-{"__REALTIME_TIMESTAMP":"1705314225000000","_HOSTNAME":"server1","SYSLOG_IDENTIFIER":"sshd","MESSAGE":"Failed password for root from 192.168.1.100 port 22 ssh2"}
-{"__REALTIME_TIMESTAMP":"1705314230000000","_HOSTNAME":"server1","SYSLOG_IDENTIFIER":"sshd","MESSAGE":"Accepted password for john from 192.168.1.50 port 22 ssh2"}
-{"__REALTIME_TIMESTAMP":"1705314300000000","_HOSTNAME":"server1","SYSLOG_IDENTIFIER":"sudo","MESSAGE":"hacker : TTY=pts/0 ; PWD=/home/hacker ; USER=root ; COMMAND=/bin/bash"}
-{"__REALTIME_TIMESTAMP":"1705314360000000","_HOSTNAME":"server1","SYSLOG_IDENTIFIER":"useradd","MESSAGE":"new user: name=backdoor, UID=1001, GID=1001"}
