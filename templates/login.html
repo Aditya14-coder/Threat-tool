@@ -29,14 +29,25 @@
                        required>
             </div>
             <div class="tl-field" style="margin-top:1rem;">
-                <label class="tl-label">Password</label>
-                <input type="password"
-                       name="password"
-                       class="tl-input"
-                       placeholder="Enter your password"
-                       autocomplete="current-password"
-                       required>
-            </div>
+    <label class="tl-label">Password</label>
+    <div style="position:relative;">
+        <input type="password"
+               name="password"
+               id="loginPassword"
+               class="tl-input"
+               placeholder="Enter your password"
+               autocomplete="current-password"
+               style="padding-right:42px;"
+               required>
+        <button type="button"
+                onclick="togglePassword('loginPassword', this)"
+                style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
+                       background:none; border:none; cursor:pointer; color:#64748b;
+                       font-size:1rem; padding:0;">
+            👁
+        </button>
+    </div>
+</div>
 
             {% if error %}
             <div class="tl-error" style="margin-top:1rem;">{{ error }}</div>
