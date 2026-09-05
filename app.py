@@ -7,7 +7,7 @@ from smart_parser import smart_parse_json
 from smart_linux_parser import smart_parse_linux
 from threat_intel import threat_lookup
 from dotenv import load_dotenv
-
+from database import save_analysis, get_all_analyses, get_analysis_by_id, delete_analysis
 load_dotenv()
 VT_API_KEY = os.getenv("VT_API_KEY")
 app = Flask(__name__)
