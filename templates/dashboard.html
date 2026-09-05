@@ -149,16 +149,14 @@
             <div class="tl-search-card">
                 <div class="tl-section-title">Search & Filter</div>
                 
-                <form method="GET" action="/dashboard">
-                    <div class="tl-field">
-                        <label class="tl-label">Search alerts</label>
-                        <input type="text"
-                               name="search"
-                               class="tl-input"
-                               placeholder="Username, event ID, alert name..."
-                               value="{{ search_query }}">
-                    </div>
-                   
+            <div class="tl-field">
+    <label class="tl-label">Search alerts</label>
+    <input type="text"
+           id="searchInput"
+           class="tl-input"
+           placeholder="Username, event ID, alert name..."
+           oninput="applyFilters()">
+</div>
 <div class="tl-field">
     <label class="tl-label">Severity</label>
     <select id="severitySelect" class="tl-input" onchange="applyFilters()">
@@ -202,7 +200,7 @@
         <div class="tl-table-card">
             <div class="tl-table-header">
                 <div class="tl-section-title">Alert Investigation Log</div>
-                <span class="tl-table-count">{{ alerts|length }} alert(s)</span>
+                <span class="tl-table-count" id="alertCount">{{ alerts|length }} alert(s)</span>
             </div>
 
             {% if alerts %}
@@ -445,56 +443,48 @@ function toggleRow(index) {
     }
 }
 async function applyFilters() {
-    const search   = document.getElementById("searchInput").value.trim();
-    const severity = document.getElementById("severitySelect").value;
+    const search   = document.getElementById('searchInput').value;
+    const severity = document.getElementById('severitySelect').value;
 
-    const params = new URLSearchParams();
-    if (search)           params.append("search",   search);
-    if (severity !== "All") params.append("severity", severity);
+    const response = await fetch(`/filter-alerts?search=${encodeURIComponent(search)}&severity=${encodeURIComponent(severity)}`);
+    const data     = await response.json();
 
-    try {
-        const response = await fetch("/filter?" + params.toString());
-        const data     = await response.json();
-        renderTable(data.alerts);
-        updateFilterStatus(search, severity, data.count);
-    } catch (err) {
-        console.error("Filter error:", err);
-    }
+    document.getElementById('alertCount').textContent = `${data.count} alert(s)`;
+    renderTable(data.alerts);
 }
 
 function resetFilters() {
-    document.getElementById("searchInput").value    = "";
-    document.getElementById("severitySelect").value = "All";
+    document.getElementById('searchInput').value    = '';
+    document.getElementById('severitySelect').value = 'All';
     applyFilters();
 }
 
-function severityTag(sev) {
-    const map = {
-        "Critical": "tl-sev-tag-critical",
-        "High":     "tl-sev-tag-high",
-        "Medium":   "tl-sev-tag-medium",
-        "Low":      "tl-sev-tag-low"
-    };
-    return `<span class="tl-sev ${map[sev] || 'tl-sev-tag-low'}">● ${sev}</span>`;
-}
-
 function renderTable(alerts) {
-    const tbody = document.getElementById("alertTableBody");
+    const tbody = document.getElementById('alertTableBody');
 
     if (alerts.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="9" style="text-align:center; padding:3rem; color:#475569;">
-                    No alerts match your filter.
+                    <div style="font-size:1.5rem; margin-bottom:0.5rem;">◎</div>
+                    No alerts match your filter
                 </td>
             </tr>`;
         return;
     }
 
-    tbody.innerHTML = alerts.map((alert, i) => `
-        <tr class="tl-alert-row" onclick="toggleRow(${i})">
-            <td class="tl-num">${i + 1}</td>
-            <td>${severityTag(alert.severity)}</td>
+    tbody.innerHTML = alerts.map((alert, i) => {
+        const sevClass = {
+            Critical: 'tl-sev-tag-critical',
+            High:     'tl-sev-tag-high',
+            Medium:   'tl-sev-tag-medium',
+            Low:      'tl-sev-tag-low'
+        }[alert.severity] || 'tl-sev-tag-low';
+
+        return `
+        <tr class="tl-alert-row" onclick="toggleRow(${i+1})" id="row-${i+1}">
+            <td class="tl-num">${i+1}</td>
+            <td><span class="tl-sev ${sevClass}">● ${alert.severity}</span></td>
             <td class="tl-alert-name">${alert.alert_name}</td>
             <td><code class="tl-code">${alert.event_id}</code></td>
             <td class="tl-username">${alert.username}</td>
@@ -504,9 +494,9 @@ function renderTable(alerts) {
                 <span class="tl-mitre-name">${alert.mitre_name}</span>
             </td>
             <td class="tl-time">${alert.timestamp}</td>
-            <td class="tl-expand-icon" id="icon-${i}">▶</td>
+            <td class="tl-expand-icon" id="icon-${i+1}">▶</td>
         </tr>
-        <tr class="tl-detail-row" id="detail-${i}">
+        <tr class="tl-detail-row" id="detail-${i+1}">
             <td colspan="9">
                 <div class="tl-detail-wrap">
                     <div class="tl-detail-section">
@@ -538,13 +528,13 @@ function renderTable(alerts) {
                             </div>
                             <div class="tl-detail-item tl-detail-full">
                                 <span class="tl-detail-label">Description</span>
-                                <span class="tl-detail-value">${alert.description}</span>
+                                <span class="tl-detail-value">${alert.description || 'N/A'}</span>
                             </div>
                             ${alert.commandline ? `
                             <div class="tl-detail-item tl-detail-full">
                                 <span class="tl-detail-label">Command Line</span>
                                 <code class="tl-detail-cmd">${alert.commandline}</code>
-                            </div>` : ""}
+                            </div>` : ''}
                         </div>
                     </div>
                     <div class="tl-detail-section">
@@ -566,59 +556,24 @@ function renderTable(alerts) {
                     </div>
                 </div>
             </td>
-        </tr>
-    `).join("");
+        </tr>`;
+    }).join('');
 }
 
 function getInvestigationSteps(eventId) {
     const steps = {
-        4625: ["Check if multiple failed logins occurred from the same IP — may indicate brute force.",
-               "Verify whether the targeted account exists and has elevated privileges.",
-               "Cross-reference the source IP with threat intelligence lookup.",
-               "Check for a successful login (Event 4624) shortly after the failures."],
-        4720: ["Verify if this user creation was authorized by an administrator.",
-               "Check the group membership of the newly created account.",
-               "Review what actions the new account performed after creation.",
-               "If unauthorized, disable the account and investigate the creator."],
-        4104: ["Decode the Base64 encoded PowerShell command to reveal the actual payload.",
-               "Check if the script made network connections or downloaded files.",
-               "Review the parent process that launched PowerShell.",
-               "Hash any dropped files and check against VirusTotal."],
-        4698: ["Identify what executable the scheduled task runs and when.",
-               "Check if the task binary exists on disk and hash it.",
-               "Verify whether this task was created by a legitimate application.",
-               "Delete the task if unauthorized and investigate persistence."],
-        7045: ["Identify the service binary path and hash the executable.",
-               "Check if the service name matches any known malware signatures.",
-               "Review service start type — auto-start services persist across reboots.",
-               "Stop and disable the service if unauthorized."],
+        4625:      ["Check if multiple failed logins occurred from the same IP.", "Verify whether the targeted account exists and has elevated privileges.", "Cross-reference the source IP with threat intelligence lookup.", "Check for a successful login (Event 4624) shortly after the failures."],
+        'SSH-FAIL':["Check if multiple failed logins occurred from the same IP.", "Verify whether the targeted account exists.", "Cross-reference the source IP with threat intelligence lookup.", "Check for a successful SSH login shortly after the failures."],
+        4720:      ["Verify if this user creation was authorized.", "Check the group membership of the newly created account.", "Review what actions the new account performed after creation.", "If unauthorized, disable the account and investigate the creator."],
+        4104:      ["Decode the Base64 encoded PowerShell command to reveal the payload.", "Check if the script made network connections or downloaded files.", "Review the parent process that launched PowerShell.", "Hash any dropped files and check against VirusTotal."],
+        4698:      ["Identify what executable the scheduled task runs and when.", "Check if the task binary exists on disk and hash it.", "Verify whether this task was created by a legitimate application.", "Delete the task if unauthorized and investigate persistence."],
+        7045:      ["Identify the service binary path and hash the executable.", "Check if the service name matches any known malware signatures.", "Review service start type — auto-start services persist across reboots.", "Stop and disable the service if unauthorized."],
+        'SUDO-EXEC':["Verify if the user is authorized to run sudo commands.", "Check the specific command — shell commands like /bin/bash are high risk.", "Review /etc/sudoers to confirm what privileges this user has.", "Correlate with other activity from this user around the same time."],
+        'SU-FAIL': ["Check if multiple su failures occurred.", "Identify which account was being targeted.", "Review whether a successful su followed the failures."],
     };
 
-    const defaultSteps = [
-        "Review the full context of this event in surrounding log entries.",
-        "Correlate this alert with other alerts from the same user or host.",
-        "Check the MITRE ATT&CK page for recommended detection and mitigation."
-    ];
-
-    const list = steps[eventId] || defaultSteps;
-    return list.map(s => `<div class="tl-step">${s}</div>`).join("");
-}
-
-function updateFilterStatus(search, severity, count) {
-    const statusEl   = document.getElementById("filterStatus");
-    const pillText   = document.getElementById("filterPillText");
-    const countEl    = document.getElementById("filterCount");
-    const tableCount = document.querySelector(".tl-table-count");
-
-    if (search || severity !== "All") {
-        statusEl.style.display = "flex";
-        pillText.textContent   = `${severity !== "All" ? " · " + severity : ""}${search ? ' · "' + search + '"' : ""}`;
-        countEl.textContent    = `${count} result(s)`;
-    } else {
-        statusEl.style.display = "none";
-    }
-
-    if (tableCount) tableCount.textContent = `${count} alert(s)`;
+    const list = steps[eventId] || ["Review the full context of this event in surrounding log entries.", "Correlate this alert with other alerts from the same user or host.", "Check the MITRE ATT&CK page for recommended detection and mitigation."];
+    return list.map(s => `<div class="tl-step">${s}</div>`).join('');
 }
     
 </script>
