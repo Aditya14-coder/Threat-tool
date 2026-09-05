@@ -6,9 +6,9 @@ from pymongo import MongoClient
 
 # ── Connect to MongoDB ───────────────────────────────────
 def get_db():
-    uri    = os.getenv("MONGO_URI")
+    uri = os.getenv("MONGO_URI")
     client = MongoClient(uri, tlsCAFile=certifi.where())
-    db     = client["threatlens"]
+    db = client["threatlens"]
     return db
 
 
