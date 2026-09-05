@@ -128,9 +128,24 @@ def index():
                            role=session.get("role"),
                            color=session.get("color"))
 
+@app.route("/filter")
+def filter_alerts():
+    severity_filter = request.args.get("severity", "All")
+    search_query    = request.args.get("search", "").lower()
+    filtered        = current_alerts
+
+    if severity_filter != "All":
+        filtered = [a for a in filtered if a["severity"] == severity_filter]
+
+    if search_query:
+        filtered = [a for a in filtered if
+                    search_query in str(a["event_id"]) or
+                    search_query in a["username"].lower() or
+                    search_query in a["alert_name"].lower()]
+
+    return {"alerts": filtered, "count": len(filtered)}
 
 @app.route("/dashboard")
-
 def dashboard():
     severity_filter = request.args.get("severity", "All")
     search_query    = request.args.get("search", "").lower()
