@@ -72,10 +72,6 @@
 </div>
 
 <script>
-const savedTheme = localStorage.getItem('tl-theme') || 'dark';
-if (savedTheme === 'light') document.body.classList.add('light-mode');
-</script>
-<script>
 function togglePassword(fieldId, btn) {
     const input = document.getElementById(fieldId);
     if (input.type === "password") {
@@ -86,6 +82,7 @@ function togglePassword(fieldId, btn) {
         btn.style.opacity = "0.5";
     }
 }
+
 const savedTheme = localStorage.getItem('tl-theme') || 'dark';
 if (savedTheme === 'light') document.body.classList.add('light-mode');
 </script>
