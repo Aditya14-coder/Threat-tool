@@ -45,6 +45,7 @@ def index():
             return render_template("index.html", error="Unsupported file type. Upload .json or .log files.")
 
         current_summary = get_summary(current_alerts)
+        analysis_id = save_analysis(filename, current_alerts, current_summary)
         return redirect(url_for("dashboard"))
 
     return render_template("index.html", error=None)
@@ -93,6 +94,39 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from io import BytesIO
 from datetime import datetime
 
+@app.route("/history")
+@login_required
+def history():
+    analyses = get_all_analyses()
+    # Convert ObjectId to string for template
+    for a in analyses:
+        a["_id"] = str(a["_id"])
+        a["uploaded_at"] = a["uploaded_at"].strftime("%Y-%m-%d %H:%M:%S")
+    return render_template("history.html",
+                           analyses=analyses,
+                           username=session.get("username"),
+                           role=session.get("role"),
+                           color=session.get("color"))
+
+
+@app.route("/history/<analysis_id>")
+@login_required
+def view_analysis(analysis_id):
+    analysis = get_analysis_by_id(analysis_id)
+    if not analysis:
+        return redirect(url_for("history"))
+
+    alerts  = analysis.get("alerts", [])
+    summary = analysis.get("summary", {})
+    set_user_data(alerts, summary)
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/history/delete/<analysis_id>")
+@login_required
+def delete_analysis_route(analysis_id):
+    delete_analysis(analysis_id)
+    return redirect(url_for("history"))
 
 @app.route("/report")
 def generate_report():
