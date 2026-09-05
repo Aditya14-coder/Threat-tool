@@ -73,6 +73,7 @@ def register():
         elif password != confirm:
             error = "Passwords do not match."
         else:
+            role = "User"
             ok, message = register_user(username, password, role)
             if ok:
                 success = "Account created! You can now log in."
