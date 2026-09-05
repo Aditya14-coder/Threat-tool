@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreatLens - Analysis History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="tl-navbar">
+    <div class="tl-navbar-brand">
+        <span class="tl-logo-icon">⬡</span>
+        <span class="tl-logo-text">ThreatLens</span>
+        <span class="tl-logo-sub">SOC Platform</span>
+    </div>
+    <div class="tl-navbar-right">
+        <button class="tl-theme-btn" onclick="toggleTheme()" id="themeBtn">☀ Light mode</button>
+        <a href="/lookup-page" class="tl-nav-btn tl-nav-btn-danger">🛡 Threat Intel</a>
+        <a href="/" class="tl-nav-btn">↑ Upload Log</a>
+        <div class="tl-user-pill">
+            <span class="tl-user-dot" style="background: {{ color }};"></span>
+            <span class="tl-user-name">{{ username }}</span>
+            <span class="tl-user-role">{{ role }}</span>
+            <a href="/logout" class="tl-logout-btn">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="tl-layout">
+    <aside class="tl-sidebar">
+        <div class="tl-sidebar-label">Navigate</div>
+        <a href="/"          class="tl-sidebar-item"><span>↑</span> Upload Log</a>
+        <a href="/dashboard" class="tl-sidebar-item"><span>▦</span> Dashboard</a>
+        <a href="/history"   class="tl-sidebar-item active"><span>◷</span> History</a>
+        <a href="/lookup-page" class="tl-sidebar-item"><span>◎</span> Threat Intel</a>
+    </aside>
+
+    <main class="tl-main">
+        <div class="tl-page-header">
+            <div>
+                <h1 class="tl-page-title">Analysis History</h1>
+                <p class="tl-page-sub">All past log analysis sessions stored in database</p>
+            </div>
+        </div>
+
+        <div class="tl-table-card">
+            <div class="tl-table-header">
+                <div class="tl-section-title">Past Analyses</div>
+                <span class="tl-table-count">{{ analyses|length }} session(s)</span>
+            </div>
+
+            {% if analyses %}
+            <div class="tl-table-wrap">
+                <table class="tl-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Filename</th>
+                            <th>Uploaded At</th>
+                            <th>Total</th>
+                            <th>Critical</th>
+                            <th>High</th>
+                            <th>Medium</th>
+                            <th>Low</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in analyses %}
+                        <tr>
+                            <td class="tl-num">{{ loop.index }}</td>
+                            <td class="tl-alert-name">{{ a.filename }}</td>
+                            <td class="tl-time">{{ a.uploaded_at }}</td>
+                            <td><code class="tl-code">{{ a.summary.get('total', 0) }}</code></td>
+                            <td><span class="tl-sev tl-sev-tag-critical">{{ a.summary.get('critical', 0) }}</span></td>
+                            <td><span class="tl-sev tl-sev-tag-high">{{ a.summary.get('high', 0) }}</span></td>
+                            <td><span class="tl-sev tl-sev-tag-medium">{{ a.summary.get('medium', 0) }}</span></td>
+                            <td><span class="tl-sev tl-sev-tag-low">{{ a.summary.get('low', 0) }}</span></td>
+                            <td>
+                                <div style="display:flex; gap:6px;">
+                                    <a href="/history/{{ a._id }}"
+                                       class="tl-btn-primary"
+                                       style="padding:4px 12px; font-size:0.75rem;">
+                                        View
+                                    </a>
+                                    <a href="/history/delete/{{ a._id }}"
+                                       class="tl-btn-ghost"
+                                       style="padding:4px 12px; font-size:0.75rem;"
+                                       onclick="return confirm('Delete this analysis?')">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+            <div class="tl-empty">
+                <div class="tl-empty-icon">◷</div>
+                <div class="tl-empty-title">No analyses saved yet</div>
+                <a href="/" class="tl-btn-ghost" style="margin-top:1rem;">Upload a log file</a>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<script>
+function applyTheme(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-mode');
+        document.getElementById('themeBtn').innerHTML = '☾ Dark mode';
+    } else {
+        document.body.classList.remove('light-mode');
+        document.getElementById('themeBtn').innerHTML = '☀ Light mode';
+    }
+}
+function toggleTheme() {
+    const isLight  = document.body.classList.contains('light-mode');
+    const newTheme = isLight ? 'dark' : 'light';
+    localStorage.setItem('tl-theme', newTheme);
+    applyTheme(newTheme);
+}
+const savedTheme = localStorage.getItem('tl-theme') || 'dark';
+applyTheme(savedTheme);
+</script>
+
+</body>
+</html>
