@@ -97,7 +97,6 @@ def logout():
 
 # ── Main Routes ──────────────────────────────────────────
 @app.route("/", methods=["GET", "POST"])
-@login_required
 def index():
     global current_alerts, current_summary
 
@@ -137,7 +136,7 @@ def index():
 
 
 @app.route("/dashboard")
-@login_required
+
 def dashboard():
     severity_filter = request.args.get("severity", "All")
     search_query    = request.args.get("search", "").lower()
@@ -163,7 +162,7 @@ def dashboard():
 
 
 @app.route("/lookup-page")
-@login_required
+
 def lookup_page():
     return render_template("lookup.html",
                            username=session.get("username"),
@@ -172,7 +171,7 @@ def lookup_page():
 
 
 @app.route("/lookup", methods=["POST"])
-@login_required
+
 def lookup():
     from threat_intel import threat_lookup
     query = request.form.get("query", "").strip()
@@ -193,7 +192,7 @@ from datetime import datetime
 
 
 @app.route("/report")
-@login_required
+
 def generate_report():
     if not current_alerts:
         return redirect(url_for("dashboard"))
