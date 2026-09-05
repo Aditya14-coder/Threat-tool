@@ -63,7 +63,6 @@ def register():
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
         confirm  = request.form.get("confirm",  "").strip()
-        role     = request.form.get("role",     "SOC Analyst")
 
         if not username or not password:
             error = "Username and password are required."
