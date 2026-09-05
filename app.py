@@ -36,25 +36,18 @@ def login_required(f):
 
 # ── Auth Routes ──────────────────────────────────────────
 @app.route("/login", methods=["GET", "POST"])
-@login_required
 def login():
-    if "username" in session:
-        return redirect(url_for("index"))
-
     error = None
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "").strip()
-
         user = verify_user(username, password)
         if user:
             session["username"] = user["username"]
-            session["role"]     = user["role"]
-            session["color"]    = user["color"]
+            session["color"]    = "#3b82f6"
             return redirect(url_for("index"))
         else:
             error = "Invalid username or password."
-
     return render_template("login.html", error=error)
 
 
@@ -98,7 +91,6 @@ def logout():
 
 # ── Main Routes ──────────────────────────────────────────
 @app.route("/", methods=["GET", "POST"])
-@login_required
 def index():
     global current_alerts, current_summary
 
