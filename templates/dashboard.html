@@ -148,6 +148,7 @@
             <!-- Search -->
             <div class="tl-search-card">
                 <div class="tl-section-title">Search & Filter</div>
+                
                 <form method="GET" action="/dashboard">
                     <div class="tl-field">
                         <label class="tl-label">Search alerts</label>
@@ -160,19 +161,37 @@
                     <div class="tl-field">
                         <label class="tl-label">Severity</label>
                         <select name="severity" class="tl-input">
-                            <option value="All">All severities</option>
-                            <option value="Critical" {% if severity_filter == 'Critical' %}selected{% endif %}>Critical</option>
-                            <option value="High"     {% if severity_filter == 'High' %}selected{% endif %}>High</option>
-                            <option value="Medium"   {% if severity_filter == 'Medium' %}selected{% endif %}>Medium</option>
-                            <option value="Low"      {% if severity_filter == 'Low' %}selected{% endif %}>Low</option>
-                        </select>
-                    </div>
-                    <div class="tl-btn-row">
-                        <button type="submit" class="tl-btn-primary">Apply filters</button>
-                        <a href="/dashboard" class="tl-btn-ghost">Reset</a>
-                    </div>
-                </form>
+                     <div class="tl-field">
+    <label class="tl-label">Search alerts</label>
+    <input type="text"
+           id="searchInput"
+           class="tl-input"
+           placeholder="Username, event ID, alert name..."
+           oninput="applyFilters()">
+</div>
+<div class="tl-field">
+    <label class="tl-label">Severity</label>
+    <select id="severitySelect" class="tl-input" onchange="applyFilters()">
+        <option value="All">All severities</option>
+        <option value="Critical">Critical</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+    </select>
+</div>
+<div class="tl-btn-row">
+    <button onclick="applyFilters()" class="tl-btn-primary">Apply filters</button>
+    <button onclick="resetFilters()" class="tl-btn-ghost">Reset</button>
+</div>
 
+<div id="filterStatus" class="tl-active-filter" style="display:none;">
+    <span class="tl-filter-pill">
+        Filtered
+        <span id="filterPillText"></span>
+        <span onclick="resetFilters()" class="tl-filter-clear" style="cursor:pointer;">✕</span>
+    </span>
+    <span class="tl-filter-count" id="filterCount"></span>
+</div>
                 <!-- Active filter pill -->
                 {% if severity_filter != 'All' or search_query %}
                 <div class="tl-active-filter">
@@ -212,7 +231,7 @@
         <th></th>
     </tr>
 </thead>
-                    <tbody>
+<tbody id="alertTableBody">
     {% for alert in alerts %}
     <tr class="tl-alert-row" onclick="toggleRow({{ loop.index }})">
         <td class="tl-num">{{ loop.index }}</td>
@@ -435,6 +454,183 @@ function toggleRow(index) {
         icon.classList.add('open');
     }
 }
+async function applyFilters() {
+    const search   = document.getElementById("searchInput").value.trim();
+    const severity = document.getElementById("severitySelect").value;
+
+    const params = new URLSearchParams();
+    if (search)           params.append("search",   search);
+    if (severity !== "All") params.append("severity", severity);
+
+    try {
+        const response = await fetch("/filter?" + params.toString());
+        const data     = await response.json();
+        renderTable(data.alerts);
+        updateFilterStatus(search, severity, data.count);
+    } catch (err) {
+        console.error("Filter error:", err);
+    }
+}
+
+function resetFilters() {
+    document.getElementById("searchInput").value    = "";
+    document.getElementById("severitySelect").value = "All";
+    applyFilters();
+}
+
+function severityTag(sev) {
+    const map = {
+        "Critical": "tl-sev-tag-critical",
+        "High":     "tl-sev-tag-high",
+        "Medium":   "tl-sev-tag-medium",
+        "Low":      "tl-sev-tag-low"
+    };
+    return `<span class="tl-sev ${map[sev] || 'tl-sev-tag-low'}">● ${sev}</span>`;
+}
+
+function renderTable(alerts) {
+    const tbody = document.getElementById("alertTableBody");
+
+    if (alerts.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align:center; padding:3rem; color:#475569;">
+                    No alerts match your filter.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    tbody.innerHTML = alerts.map((alert, i) => `
+        <tr class="tl-alert-row" onclick="toggleRow(${i})">
+            <td class="tl-num">${i + 1}</td>
+            <td>${severityTag(alert.severity)}</td>
+            <td class="tl-alert-name">${alert.alert_name}</td>
+            <td><code class="tl-code">${alert.event_id}</code></td>
+            <td class="tl-username">${alert.username}</td>
+            <td class="tl-host">${alert.hostname}</td>
+            <td>
+                <span class="tl-mitre">${alert.mitre_id}</span>
+                <span class="tl-mitre-name">${alert.mitre_name}</span>
+            </td>
+            <td class="tl-time">${alert.timestamp}</td>
+            <td class="tl-expand-icon" id="icon-${i}">▶</td>
+        </tr>
+        <tr class="tl-detail-row" id="detail-${i}">
+            <td colspan="9">
+                <div class="tl-detail-wrap">
+                    <div class="tl-detail-section">
+                        <div class="tl-detail-heading">Alert Details</div>
+                        <div class="tl-detail-grid">
+                            <div class="tl-detail-item">
+                                <span class="tl-detail-label">Alert Name</span>
+                                <span class="tl-detail-value">${alert.alert_name}</span>
+                            </div>
+                            <div class="tl-detail-item">
+                                <span class="tl-detail-label">Severity</span>
+                                <span class="tl-detail-value">${alert.severity}</span>
+                            </div>
+                            <div class="tl-detail-item">
+                                <span class="tl-detail-label">Event ID</span>
+                                <span class="tl-detail-value"><code class="tl-code">${alert.event_id}</code></span>
+                            </div>
+                            <div class="tl-detail-item">
+                                <span class="tl-detail-label">Timestamp</span>
+                                <span class="tl-detail-value">${alert.timestamp}</span>
+                            </div>
+                            <div class="tl-detail-item">
+                                <span class="tl-detail-label">Username</span>
+                                <span class="tl-detail-value">${alert.username}</span>
+                            </div>
+                            <div class="tl-detail-item">
+                                <span class="tl-detail-label">Hostname</span>
+                                <span class="tl-detail-value">${alert.hostname}</span>
+                            </div>
+                            <div class="tl-detail-item tl-detail-full">
+                                <span class="tl-detail-label">Description</span>
+                                <span class="tl-detail-value">${alert.description}</span>
+                            </div>
+                            ${alert.commandline ? `
+                            <div class="tl-detail-item tl-detail-full">
+                                <span class="tl-detail-label">Command Line</span>
+                                <code class="tl-detail-cmd">${alert.commandline}</code>
+                            </div>` : ""}
+                        </div>
+                    </div>
+                    <div class="tl-detail-section">
+                        <div class="tl-detail-heading">MITRE ATT&CK</div>
+                        <div class="tl-mitre-block">
+                            <div class="tl-mitre-id-large">${alert.mitre_id}</div>
+                            <div class="tl-mitre-name-large">${alert.mitre_name}</div>
+                            <a href="https://attack.mitre.org/techniques/${alert.mitre_id.replace('.', '/')}"
+                               target="_blank" class="tl-mitre-link">
+                                View on MITRE ATT&CK ↗
+                            </a>
+                        </div>
+                    </div>
+                    <div class="tl-detail-section">
+                        <div class="tl-detail-heading">Investigation Steps</div>
+                        <div class="tl-steps">
+                            ${getInvestigationSteps(alert.event_id)}
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function getInvestigationSteps(eventId) {
+    const steps = {
+        4625: ["Check if multiple failed logins occurred from the same IP — may indicate brute force.",
+               "Verify whether the targeted account exists and has elevated privileges.",
+               "Cross-reference the source IP with threat intelligence lookup.",
+               "Check for a successful login (Event 4624) shortly after the failures."],
+        4720: ["Verify if this user creation was authorized by an administrator.",
+               "Check the group membership of the newly created account.",
+               "Review what actions the new account performed after creation.",
+               "If unauthorized, disable the account and investigate the creator."],
+        4104: ["Decode the Base64 encoded PowerShell command to reveal the actual payload.",
+               "Check if the script made network connections or downloaded files.",
+               "Review the parent process that launched PowerShell.",
+               "Hash any dropped files and check against VirusTotal."],
+        4698: ["Identify what executable the scheduled task runs and when.",
+               "Check if the task binary exists on disk and hash it.",
+               "Verify whether this task was created by a legitimate application.",
+               "Delete the task if unauthorized and investigate persistence."],
+        7045: ["Identify the service binary path and hash the executable.",
+               "Check if the service name matches any known malware signatures.",
+               "Review service start type — auto-start services persist across reboots.",
+               "Stop and disable the service if unauthorized."],
+    };
+
+    const defaultSteps = [
+        "Review the full context of this event in surrounding log entries.",
+        "Correlate this alert with other alerts from the same user or host.",
+        "Check the MITRE ATT&CK page for recommended detection and mitigation."
+    ];
+
+    const list = steps[eventId] || defaultSteps;
+    return list.map(s => `<div class="tl-step">${s}</div>`).join("");
+}
+
+function updateFilterStatus(search, severity, count) {
+    const statusEl   = document.getElementById("filterStatus");
+    const pillText   = document.getElementById("filterPillText");
+    const countEl    = document.getElementById("filterCount");
+    const tableCount = document.querySelector(".tl-table-count");
+
+    if (search || severity !== "All") {
+        statusEl.style.display = "flex";
+        pillText.textContent   = `${severity !== "All" ? " · " + severity : ""}${search ? ' · "' + search + '"' : ""}`;
+        countEl.textContent    = `${count} result(s)`;
+    } else {
+        statusEl.style.display = "none";
+    }
+
+    if (tableCount) tableCount.textContent = `${count} alert(s)`;
+}
+    
 </script>
 </body>
 </html>
