@@ -1,7 +1,7 @@
 import os
+import bcrypt
 import certifi
 from pymongo import MongoClient
-from datetime import datetime
 
 
 # ── Connect to MongoDB ───────────────────────────────────
@@ -12,56 +12,55 @@ def get_db():
     return db
 
 
-# ── Save a full analysis session ────────────────────────
-def save_analysis(filename, alerts, summary):
+# ── Register a new user ──────────────────────────────────
+def register_user(username, password, role):
     """
-    Saves an uploaded log analysis to MongoDB.
-    Creates one document per analysis session containing
-    the filename, timestamp, summary, and all alerts.
+    Creates a new user in the database.
+    Password is hashed with bcrypt before storing.
+    Returns True if successful, False if username already exists.
     """
     db = get_db()
 
-    document = {
-        "filename":    filename,
-        "uploaded_at": datetime.utcnow(),
-        "summary":     summary,
-        "alerts":      alerts,
-        "total":       summary.get("total", 0)
-    }
+    # Check if username already taken
+    existing = db["users"].find_one({"username": username})
+    if existing:
+        return False, "Username already exists."
 
-    result = db["analyses"].insert_one(document)
-    return str(result.inserted_id)
+    # Hash the password
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+    db["users"].insert_one({
+        "username": username,
+        "password": hashed,
+        "role":     role,
+        "color":    role_color(role)
+    })
+    return True, "Account created successfully."
 
 
-# ── Get all past analyses ────────────────────────────────
-def get_all_analyses():
+# ── Verify login credentials ─────────────────────────────
+def verify_user(username, password):
     """
-    Returns all past analysis sessions, newest first.
+    Checks username and password against the database.
+    Returns user dict if valid, None if invalid.
     """
-    db       = get_db()
-    analyses = db["analyses"].find(
-        {},
-        {"filename": 1, "uploaded_at": 1, "summary": 1, "total": 1}
-    ).sort("uploaded_at", -1)
-    return list(analyses)
+    db   = get_db()
+    user = db["users"].find_one({"username": username})
+
+    if not user:
+        return None
+
+    # Compare hashed password
+    if bcrypt.checkpw(password.encode("utf-8"), user["password"]):
+        return user
+
+    return None
 
 
-# ── Get one specific analysis by ID ─────────────────────
-def get_analysis_by_id(analysis_id):
-    """
-    Returns a single analysis document by its MongoDB ID.
-    """
-    from bson import ObjectId
-    db       = get_db()
-    analysis = db["analyses"].find_one({"_id": ObjectId(analysis_id)})
-    return analysis
-
-
-# ── Delete an analysis ───────────────────────────────────
-def delete_analysis(analysis_id):
-    """
-    Deletes an analysis document by its MongoDB ID.
-    """
-    from bson import ObjectId
-    db = get_db()
-    db["analyses"].delete_one({"_id": ObjectId(analysis_id)})
+# ── Helper: role to color ────────────────────────────────
+def role_color(role):
+    return {
+        "Administrator": "#ef4444",
+        "SOC Analyst":   "#3b82f6",
+        "Viewer":        "#64748b"
+    }.get(role, "#64748b")
