@@ -11,6 +11,7 @@ fonttools==4.63.0
 gast==0.7.0
 google-pasta==0.2.0
 grpcio==1.83.1
+gunicorn
 h5py==3.14.0
 idna==3.19
 joblib==1.5.3
