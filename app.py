@@ -36,6 +36,7 @@ def login_required(f):
 
 # ── Auth Routes ──────────────────────────────────────────
 @app.route("/login", methods=["GET", "POST"])
+@login_required
 def login():
     if "username" in session:
         return redirect(url_for("index"))
@@ -97,6 +98,7 @@ def logout():
 
 # ── Main Routes ──────────────────────────────────────────
 @app.route("/", methods=["GET", "POST"])
+@login_required
 def index():
     global current_alerts, current_summary
 
