@@ -13,7 +13,7 @@ def get_db():
 
 
 # ── Register a new user ──────────────────────────────────
-def register_user(username, password, role):
+def register_user(username, password):
     """
     Creates a new user in the database.
     Password is hashed with bcrypt before storing.
@@ -32,8 +32,6 @@ def register_user(username, password, role):
     db["users"].insert_one({
         "username": username,
         "password": hashed,
-        "role":     role,
-        "color":    role_color(role)
     })
     return True, "Account created successfully."
 
@@ -57,10 +55,3 @@ def verify_user(username, password):
     return None
 
 
-# ── Helper: role to color ────────────────────────────────
-def role_color(role):
-    return {
-        "Administrator": "#ef4444",
-        "SOC Analyst":   "#3b82f6",
-        "Viewer":        "#64748b"
-    }.get(role, "#64748b")
