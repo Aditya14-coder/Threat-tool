@@ -216,7 +216,7 @@ def generate_report():
     title_style = ParagraphStyle(
         "Title", parent=styles["Heading1"],
         fontSize=20, textColor=colors.HexColor("#c0392b"), spaceAfter=6)
-    elements.append(Paragraph("ThreatLens — SOC Investigation Report", title_style))
+    elements.append(Paragraph("ThreatTool — SOC Investigation Report", title_style))
 
     sub_style = ParagraphStyle(
         "Sub", parent=styles["Normal"],
@@ -312,7 +312,7 @@ def generate_report():
     response = make_response(buffer.read())
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = \
-        "attachment; filename=threatlens_report.pdf"
+        "attachment; filename=threattool_report.pdf"
     return response
 
 
